@@ -1,4 +1,3 @@
-//#include <Arduino.h>
 #include <Servo.h>
 #include <GyverPower.h>
 #include <TimerMs.h>
@@ -13,24 +12,32 @@ int dtime = 50; // dtime=diffirence time
 int tol = 10; //tol=tolerance
 bool parked = false;
 
-Servo horizontal; // horizontal servo
+// ----- Motor`s Definition Section -----------------
+Servo horizontal; // Horizontal servo (Up/Down)
 int servoh = 40;
 int servoh_old = servoh;
-int servohLimitHigh = 90;
-int servohLimitLow = 5;
+int servohLimitHigh = 90; //Up Position Limit
+int servohLimitLow = 5;   //Down Position Linit
 
-Servo vertical; // vertical servo
+Servo vertical; // Vertical servo (Left/Right)
 int servov = 60;
 int servov_old = servov;
-int servovLimitHigh = 120;
-int servovLimitLow = 5;
+int servovLimitHigh = 120; // Right Position Limit
+int servovLimitLow = 5;    // Left Position Limit
+// ---------------------------------------------------
 
-// LDR pin connections
+/* LDR pin connections:
+-----------------------
+      A3 | A2
+     ----+----
+      A1 | A0
+-----------------------
+*/
 // name = analogpin;
-int ldrlt = A0; //LDR top left - BOTTOM LEFT <--- BDG
-int ldrrt = A1; //LDR top rigt - BOTTOM RIGHT
-int ldrld = A2; //LDR down left - TOP LEFT
-int ldrrd = A3; //ldr down rigt - TOP RIGHT
+int ldrlt = A0; //Down Right
+int ldrrt = A1; //Down Left
+int ldrld = A2; //Up Right
+int ldrrd = A3; //Up Letf
 
 TimerMs tmr(worktime_ms, 1, 1);
 
@@ -52,15 +59,15 @@ void setup() {
    }
    power.hardwareDisable(PWR_I2C | PWR_SPI | PWR_USB | PWR_TIMER2);
    power.setSleepMode(POWERDOWN_SLEEP);
-   horizontal.attach(9);
-   vertical.attach(8);
+   horizontal.attach(9); //Horizontal(Up/Down) move motor pin
+   vertical.attach(8); //Vertical(Left/Right) move motor pin
    setstartpos();
    delay(1000);
    if ( DEBUG ) {
       Serial.println("Starting from position:");
-      Serial.println("-------------------------");
+      Serial.println("---------------------------------------");
       servo_pos_print();
-      Serial.println("-------------------------");
+      Serial.println("---------------------------------------");
    }
    tmr.start();
 }
@@ -75,8 +82,7 @@ void loop() {
    int avd = (ld + rd) / 2; // average value down
    int avl = (lt + ld) / 2; // average value left
    int avr = (rt + rd) / 2; // average value right
-   //int dvert = avt - avd; // check the diffirence of up and down
-   //int dhoriz = avl - avr;// check the diffirence og left and rigt
+
    if ( DEBUG) {
       Serial.print("lt: ");
       Serial.print(lt);
@@ -90,7 +96,6 @@ void loop() {
 
    if ((lt+rt+ld+rd) > (tol*4)) {
       parked = false;
-   //       if (-1*tol > dvert || dvert > tol) {
          if (((avl - avr) > tol) && ((avl - avr) > 0)) {
             servov = servov - 1;
             if (servov < servovLimitLow) {
@@ -114,8 +119,6 @@ void loop() {
             }
          }
          servov_old = servov;
-   //       }
-   //       if (-1*tol > dhoriz || dhoriz > tol) {// check if the diffirence is in the tolerance else change horizontal angle
          if (((avt - avd) > tol) && ((avt - avd) > 0)) {
             servoh = servoh - 1;
             if (servoh < servohLimitLow) {
@@ -139,8 +142,6 @@ void loop() {
             }
          }
          servoh_old = servoh;
-
-   //       }
       delay(dtime);
    } else {
       if (parked == false) {
